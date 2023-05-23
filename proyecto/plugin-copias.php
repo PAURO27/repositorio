@@ -7,12 +7,16 @@ Version: 1.0
 Author: Pau
 */
 
-// Establecer opciones default
+// Establecer opciones default. utilizadas para almacenar la frecuencia, el tipo y la ubicación donde se guardarán las copias de seguridad. 
 add_option('backup_frequency', 'daily');
 add_option('backup_type', 'full');
 add_option('backup_location', '/wp-content/backups');
 
 // Programar copias de seguridad (schedule backups)
+// custom_backup_schedule()=  programa las copias según la frecuencia establecida. 
+//  |--> Obtiene info get_option('backup_frequency'). 
+//Luego, utiliza wp_schedule_event(), programa un evento de copia de seguridad personalizado (custom_backup_event) 
+//Dependiendo de la frecuencia, se programa un evento diario, semanal o mensual.
 function custom_backup_schedule() {
     $frequency = get_option('backup_frequency');
     if ($frequency == 'daily') {
@@ -26,6 +30,8 @@ function custom_backup_schedule() {
 add_action('admin_init', 'custom_backup_schedule');
 
 // Funcion de la copia de seguridad
+//custom_backup()=función principal que se ejecuta cuando ocurre el evento de copia personalizado (custom_backup_event). 
+//Recibe info: tipo y ubicación dichas antes.
 function custom_backup() {
     //  Tener opciones (tipo y ubicacion) de copia de seguridad
     $type = get_option('backup_type');
@@ -57,6 +63,7 @@ function custom_backup() {
         // Backup de la base de datos WordPress 
         $backup_file = $location . '/database-' . $date . '.sql';
         exec("mysqldump --user=" . DB_USER . " --password=" . DB_PASSWORD . " --host=" . DB_HOST . " " . DB_NAME . " > " . $backup_file);
+        
     } elseif ($type == 'files') {
         // Backup de archivos de WordPress 
         $zip = new ZipArchive();
@@ -73,6 +80,7 @@ function custom_backup() {
             }
         }
         $zip->close();
+        
     } elseif ($type == 'database') {
         // Backup de base de datos de WordPress 
         $backup_file = $location . '/database-' . $date . '.sql';
